@@ -22,7 +22,7 @@ class Accounts(models.Model):
     
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     nickname = models.CharField(max_length=50)
-    active = models.BooleanField(default=True)
+    is_authenticated = models.BooleanField(default=True)
     min_duration = models.PositiveIntegerField(default=5, blank=False,
                                                 validators=[MinValueValidator(1), MaxValueValidator(50)])
     max_file_size = models.PositiveIntegerField(default=10, blank=False, 

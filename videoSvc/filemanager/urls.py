@@ -1,9 +1,10 @@
 from django.urls import path
 # from rest_framework.routers import DefaultRouter
-from .views import UploadFileView
+from .views import UploadFileView, TrimFileView
 
 urlpatterns = [
     path("upload/", UploadFileView.as_view(), name="file_upload"),
+    path("trim/", TrimFileView.as_view(), name="file_trim"),
 ]
 
 
