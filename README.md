@@ -63,6 +63,18 @@ To run test in local setup.
 cd <repo path>/videoSvc
 python3 manage.py test
 ```
+To run app specific in test cases.
+```sh
+python3 manage.py test filemanager.tests
+```
+To run specific test cases from a class/functionality.
+```sh
+python3 manage.py test filemanager.tests.VideoMergeTest
+```
+To run specific test case from a class/functionality.
+```sh
+python3 manage.py test filemanager.tests.VideoMergeTest.test_file_merge_invalid_account
+```
 
 ## Usage
 1) Create user for admin panel.
