@@ -130,8 +130,21 @@ REST_FRAMEWORK = {
     ]
 }
 
+FILE_UPLOAD_MAX_MEMORY_SIZE = 0
+
+# STORAGE_CLASSES = {
+#     "default": {
+#         "BACKEND": "django.core.files.storage.FileSystemStorage",
+#     },
+#     "staticfiles": {
+#         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+#     },
+# }
+
+
 MEDIA_ROOT = "/data/videos/"
 MEDIA_TEMP = "/data/temp/"
+MEDIA_URL = "http://localhost:8000/file/public/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

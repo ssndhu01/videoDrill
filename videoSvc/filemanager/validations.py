@@ -1,12 +1,15 @@
 import ffprobe
-import ffmpeg
+import hashlib
+import json
 import os
 import uuid
+from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from filemanager.models import Files, AccountFiles
 from moviepy import VideoFileClip
+from moviepy.video.compositing.CompositeVideoClip import concatenate_videoclips
 
 
 class FileValidator:
@@ -72,6 +75,10 @@ class FileValidator:
         file_path = os.path.join(root_dir, filename)
         os.remove(file_path)
         return True
+
+    @staticmethod
+    def get_file(file_id):
+        return Files.objects.filter(id=file_id).first()
     
     @staticmethod
     def store_file_metadata(filename, file_path, account):
@@ -79,9 +86,14 @@ class FileValidator:
         AccountFiles.objects.create(account=account, file=file)
         return file.id
     
+    @staticmethod
     def trim_video(request):
         data = request.data
-        file = Files.objects.get(id=data.get('video_id'))
+        file = Files.objects.filter(id=data.get('video_id'))
+        if not file.exists():
+            raise ValidationError("File does not exist")
+        else:
+            file = file.first()
         duration = FileValidator.get_video_duration(file.file_path)
         if data['trim_duration'] > duration:
             raise ValidationError("Trim duration exceeds video duration")
@@ -97,6 +109,28 @@ class FileValidator:
         clip.write_videofile(file_path)
         file_id = FileValidator.store_file_metadata(new_filename, file_path, request.user)
         return file_id
+    
+    @staticmethod
+    def merge_videos(request):
+        data = request.data
+        # import pdb; pdb.set_trace()
+        files = Files.objects.filter(id__in=data.get('video_ids'))
+        if len(files) >= 2 and len(files) != len(data.get('video_ids')):
+            raise ValidationError("One or more file does not exist")
+
+        # clip = VideoFileClip(file[0].file_path)
+        clips = []
+
+        for file in files:
+            clips.append(VideoFileClip(file.file_path))
+
+        final_clip = concatenate_videoclips(clips, "compose")
+        new_filename = f"{uuid.uuid4().hex}_{files[0].file_name}"
+        print(new_filename)
+        file_path = os.path.join(settings.MEDIA_ROOT, new_filename) 
+        final_clip.write_videofile(file_path)
+        file_id = FileValidator.store_file_metadata(new_filename, file_path, request.user)
+        return file_id
 
     @staticmethod
     def handle_file_upload(request):
@@ -105,9 +139,53 @@ class FileValidator:
         allowed_extensions = [fmt.format for fmt in account.allowed_formats.get_queryset().all()]
         # print(allowed_extensions)
         max_file_size = account.max_file_size * 1024 * 1024 # storing max file size in MB
-        file = request.FILES.get('video')
-        FileValidator.validate_file(file, allowed_extensions, max_file_size, 
-                                    account.min_duration, account.max_duration)
-        file_path = FileValidator.save_file(file)
-        file_id = FileValidator.store_file_metadata(file.name, file_path, account)
-        return file_id
+        import pdb; pdb.set_trace()
+        files = request.FILES.getlist('video')
+        print(len(files))
+        file_ids = []
+        for file in files:
+            FileValidator.validate_file(file, allowed_extensions, max_file_size, 
+                                        account.min_duration, account.max_duration)
+            file_path = FileValidator.save_file(file)
+            file_ids.append(str(FileValidator.store_file_metadata(file.name, file_path, account)))
+        return ",".join(file_ids)
+    
+    @staticmethod
+    def generate_hmac(file_id, start_time, expire_time):
+        return hashlib.sha256(f"{file_id}{start_time}{expire_time}{settings.SECRET_KEY}".encode()).hexdigest()
+
+    @staticmethod
+    def validate_hmac(params):
+        try:
+            file_id = params.get('pt', '0')
+            start_time = int(params.get('st', 0))
+            expire_time = int(params.get('ex', 0))
+            current_time = int(datetime.now().timestamp())
+            if current_time > start_time + expire_time:
+                raise "URL expired"
+            return params['__hdna__'] == FileValidator.generate_hmac(file_id, start_time, expire_time)
+        except Exception as e:
+            raise ValidationError("Invalid URL")   
+
+    @staticmethod
+    def generate_public_url(file, expire_time=120):
+        # considering expire time as 120 seconds for now - this can be made configurable/input basis
+        file_id = file.id
+        start_time = int(datetime.now().timestamp())
+        hmac = FileValidator.generate_hmac(file_id, start_time, expire_time)
+
+        return f"{settings.MEDIA_URL}?token=pt:{file_id}~st:{start_time}~ex:{expire_time}~__hdna__:{hmac}"
+
+    @staticmethod
+    def generate_video_urls(request):
+        data = request.GET
+        video_ids = data.get('video_ids').split(',')
+        files = Files.objects.filter(id__in=video_ids)
+        if len(files) != len(video_ids):
+            raise ValidationError("One or more file does not exist")
+
+        urls = {}
+        for file in files:
+            urls[file.id] = FileValidator.generate_public_url(file, data.get('expire_time', 120))
+
+        return json.dumps(urls)

@@ -55,3 +55,64 @@ class TrimFileView(APIView):
             return HttpResponse("File trimmed successfully with id : " + str(trimmed_video), status=200)
         except ValidationError as e:
             return HttpResponse(f"File validation failed: {e}", status=400)
+        
+
+class MergeFileView(APIView):
+    authentication_classes = [CustomTokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        data = request.data
+        video_ids = data.get('video_ids')
+
+        if not video_ids:
+            return HttpResponse("Missing required parameters", status=400)
+
+        try:
+            merged_video = FileValidator.merge_videos(request)
+            # Handle file saving here
+            return HttpResponse("File merged successfully with id : " + str(merged_video), status=200)
+        except ValidationError as e:
+            return HttpResponse(f"File validation failed: {e}", status=400)
+
+
+class GenerateFileURLView(APIView):
+    authentication_classes = [CustomTokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        data = request.GET
+        video_ids = data.get('video_ids')
+        expiry = data.get('expire_time')
+
+        if not video_ids and not expiry and expiry <= 1 and expiry >= 86400: # putting max limit of 1 day for now - can be configurable
+            return HttpResponse("Missing required parameters", status=400)
+
+        try:
+            video_urls = FileValidator.generate_video_urls(request)
+            # Handle file saving here
+            return HttpResponse(video_urls, status=200)
+        except ValidationError as e:
+            return HttpResponse(f"File validation failed: {e}", status=400)
+
+
+class DownloadFileView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        hmac_sign = request.GET.get('token')
+        if not hmac_sign:
+            return HttpResponse("Missing required parameters", status=400)
+        
+        try:
+            params = {i.split(":")[0]: i.split(":")[1] for i in hmac_sign.split('~')}
+            if not FileValidator.validate_hmac(params):
+                return HttpResponse("Invalid token", status=400)
+            file = FileValidator.get_file(params['pt'])  # pt is the file id in the token
+            with open(file.file_path, 'rb') as video:
+                response = HttpResponse(video.read(), content_type='application/octet-stream')
+                response['Content-Disposition'] = 'inline; filename=' + file.file_name
+                return response
+        except ValidationError as e:
+            return HttpResponse(f"File validation failed: {e}", status=400)
+        except FileNotFoundError:
+            return HttpResponse("File not found", status=404)

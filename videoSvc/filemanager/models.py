@@ -4,6 +4,7 @@ from common.models import Accounts
 # Create your models here.
 class Files(models.Model):
     file_name = models.CharField(max_length=50)
+    # content_type = models.CharField(max_length=50)
     file_path = models.CharField(max_length=250)
     
 
