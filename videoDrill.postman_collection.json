@@ -1,0 +1,202 @@
+{
+	"info": {
+		"_postman_id": "1a58efa4-652d-451f-8f4a-d4f83cc19ddf",
+		"name": "videoDrill",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16899136"
+	},
+	"item": [
+		{
+			"name": "File Upload",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token NdHwu0pp6ZIJ6gQTkSt1lAozgkYGmRTTuynCc7BobYEFy01IFM",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "video",
+							"type": "file",
+							"src": [
+								"/C:/Users/simra/Downloads/sampleVideos/sample_960x540.mkv",
+								"/C:/Users/simra/Downloads/sampleVideos/sample_960x540.mp4",
+								"/C:/Users/simra/Downloads/sampleVideos/sample_640x360.avi"
+							]
+						}
+					]
+				},
+				"url": {
+					"raw": "{{host}}/file/upload/",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"file",
+						"upload",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Video Merge",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"video_ids\": [15, 16,17]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/file/merge/",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"file",
+						"merge",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Video Trim",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"video_id\": 18,\n    \"trim_duration\": 5,\n    \"trim_from\": \"start\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/file/trim/",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"file",
+						"trim",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Public URLs",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/file/urls/?video_ids=19,20&expire_time=120",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"file",
+						"urls",
+						""
+					],
+					"query": [
+						{
+							"key": "video_ids",
+							"value": "19,20"
+						},
+						{
+							"key": "expire_time",
+							"value": "120",
+							"description": "in seconds"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[Sample] Shareable public URL",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/file/public/?token=pt:5~st:1734843225~ex:120~__hdna__:84c39046691f060c203efe38d11517daf215c2336577bb1e411692b62452d1c6",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"file",
+						"public",
+						""
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "pt:5~st:1734843225~ex:120~__hdna__:84c39046691f060c203efe38d11517daf215c2336577bb1e411692b62452d1c6"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

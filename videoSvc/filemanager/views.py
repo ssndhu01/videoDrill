@@ -14,7 +14,6 @@ class UploadFileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        # import pdb; pdb.set_trace()
         if 'video' not in request.FILES:
             return HttpResponse("No file uploaded", status=400) 
         
@@ -32,17 +31,17 @@ class TrimFileView(APIView):
 
     def patch(self, request, *args, **kwargs):
         data = request.data
-        video_name = data.get('video_id')
         trim_duration = data.get('trim_duration')
         trim_from = data.get('trim_from')
 
-        if not video_name or not trim_duration or not trim_from:
+        if not data.get('video_id') or not trim_duration or not trim_from:
             return HttpResponse("Missing required parameters", status=400)
 
         if trim_from not in ['start', 'end']:
             return HttpResponse("Invalid value for trim_from. Must be 'start' or 'end'", status=400)
 
         try:
+            int(data.get('video_id'))
             trim_duration = int(trim_duration)
             if trim_duration <= 0:
                 raise ValueError

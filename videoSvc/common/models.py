@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.conf import settings
 import string
 import random
 
@@ -24,11 +25,11 @@ class Accounts(models.Model):
     nickname = models.CharField(max_length=50)
     is_authenticated = models.BooleanField(default=True)
     min_duration = models.PositiveIntegerField(default=5, blank=False,
-                                                validators=[MinValueValidator(1), MaxValueValidator(50)])
+                                                validators=[MinValueValidator(settings.MIN_DURATION), MaxValueValidator(settings.MAX_DURATION)])
     max_file_size = models.PositiveIntegerField(default=10, blank=False, 
-                                                validators=[MinValueValidator(1), MaxValueValidator(20)])
+                                                validators=[MinValueValidator(1), MaxValueValidator(settings.MAX_VIDEO_SIZE)])
     max_duration = models.PositiveIntegerField(default=60, blank=False,
-                                               validators=[MinValueValidator(1), MaxValueValidator(100)])
+                                               validators=[MinValueValidator(settings.MIN_DURATION), MaxValueValidator(settings.MAX_DURATION)])
     allowed_formats = models.ManyToManyField(VideoFomats)
 
     def __str__(self):
