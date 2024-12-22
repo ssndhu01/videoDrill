@@ -10,6 +10,9 @@ from django.conf import settings
 from filemanager.models import Files, AccountFiles
 from moviepy import VideoFileClip
 from moviepy.video.compositing.CompositeVideoClip import concatenate_videoclips
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FileValidator:
@@ -25,7 +28,7 @@ class FileValidator:
             duration = int(h) * 3600 + int(m) * 60 + float(s)
             
         except Exception as e:
-            print(f"Error getting video duration: {e}")
+            logger.error(f"Error getting video duration: {e}")
 
         return duration
 
@@ -36,7 +39,7 @@ class FileValidator:
             probe_data = ffprobe.FFProbe(file_path)
             metadata = probe_data.metadata
         except Exception as e:
-            print(f"Error getting video metadata: {e}")
+            logger.error(f"Error getting video metadata: {e}")
 
         return metadata
     
@@ -88,13 +91,19 @@ class FileValidator:
     @staticmethod
     def trim_video(request):
         data = request.data
-        file = Files.objects.filter(id=data.get('video_id'))
+        try:
+            
+            if data.get('trim_from') not in ['start', 'end']:
+                raise ValueError
+        except ValueError:
+            raise ValidationError("Invalid video IDs")
+        file = Files.objects.filter(id=data.get('video_id'), account__account=request.user)
         if not file.exists():
             raise ValidationError("File does not exist")
         else:
             file = file.first()
         duration = FileValidator.get_video_duration(file.file_path)
-        if data['trim_duration'] > duration:
+        if data['trim_duration'] >= duration-1:
             raise ValidationError("Trim duration exceeds video duration")
         if data['trim_from'] == 'start':
             start = data['trim_duration']
@@ -112,8 +121,12 @@ class FileValidator:
     @staticmethod
     def merge_videos(request):
         data = request.data
-        files = Files.objects.filter(id__in=data.get('video_ids'))
-        if len(files) >= 2 and len(files) != len(data.get('video_ids')):
+        try:
+            video_ids = [int(vid) for vid in data.get('video_ids')]
+        except Exception:
+            raise ValidationError("Invalid video IDs")
+        files = Files.objects.filter(id__in=video_ids, account__account=request.user)
+        if len(files) < 2 or len(files) != len(video_ids):
             raise ValidationError("One or more file does not exist")
 
         # clip = VideoFileClip(file[0].file_path)
@@ -124,7 +137,6 @@ class FileValidator:
 
         final_clip = concatenate_videoclips(clips, "compose")
         new_filename = f"{uuid.uuid4().hex}_{files[0].file_name}"
-        print(new_filename)
         file_path = os.path.join(settings.MEDIA_ROOT, new_filename) 
         final_clip.write_videofile(file_path)
         file_id = FileValidator.store_file_metadata(new_filename, file_path, request.user)
@@ -134,10 +146,8 @@ class FileValidator:
     def handle_file_upload(request):
         account = request.user
         allowed_extensions = [fmt.format for fmt in account.allowed_formats.get_queryset().filter(active=True).all()]
-        # print(allowed_extensions)
         max_file_size = account.max_file_size * 1024 * 1024 # storing max file size in MB
         files = request.FILES.getlist('video')
-        print(len(files))
         file_ids = []
         for file in files:
             FileValidator.validate_file(file, allowed_extensions, max_file_size, 
@@ -175,8 +185,12 @@ class FileValidator:
     @staticmethod
     def generate_video_urls(request):
         data = request.GET
-        video_ids = data.get('video_ids').split(',')
-        files = Files.objects.filter(id__in=video_ids)
+        try:
+            video_ids = [int(vid) for vid in data.get('video_ids').split(',')]
+        except ValueError:
+            raise ValidationError("Invalid video IDs")
+        
+        files = Files.objects.filter(id__in=video_ids, account__account=request.user)
         if len(files) != len(video_ids):
             raise ValidationError("One or more file does not exist")
 

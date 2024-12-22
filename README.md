@@ -76,6 +76,7 @@ python3 manage.py test
 ## Assumptions & Considerations
 Currently considered Django admin panel to Token generation and configuration managements.
 <br>Stored API token in plain format. Hashing to be implemented for security purposes.
+<br>Current implementation considers sync processing for all APIs. Didn't considered parallel and async processing for Merge/Trim. Current implementation will result into higher response time for Merge and Trim API Requests. 
 <br>Considered Min and Max duration can be between 1 to 300 seconds. Changable in settings.py
 <br>Considered Maximum size can be below 50MB. Can be changed in settings.py.
 
@@ -93,6 +94,7 @@ Currently considered Django admin panel to Token generation and configuration ma
 ### Video Merging
 - File ids is considered as Input.
 - Atleast 2 ids to be passed.
+- Didn't considered output size and length of video basis account configuration.
 - Considering codec of first video passed in the input.
 - Using compose format for merging videos.
 - `ffmpeg` could be used for transcoding videos before merging for better experience. 

@@ -12,7 +12,7 @@ class Files(models.Model):
     
 class AccountFiles(models.Model):
     account = models.ForeignKey(Accounts, on_delete=models.CASCADE)
-    file = models.ForeignKey(Files, on_delete=models.CASCADE)
+    file = models.ForeignKey(Files, on_delete=models.CASCADE, related_name='account')
     createdTime = models.DateTimeField(auto_now_add=True)
     updatedTime = models.DateTimeField(auto_now=True)
     
