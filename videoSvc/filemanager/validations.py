@@ -18,7 +18,6 @@ class FileValidator:
 
     @staticmethod
     def get_video_duration(video):
-        # import pdb; pdb.set_trace()
         duration = -1
         try:
             metadata = FileValidator.get_video_metadata(video)
@@ -113,7 +112,6 @@ class FileValidator:
     @staticmethod
     def merge_videos(request):
         data = request.data
-        # import pdb; pdb.set_trace()
         files = Files.objects.filter(id__in=data.get('video_ids'))
         if len(files) >= 2 and len(files) != len(data.get('video_ids')):
             raise ValidationError("One or more file does not exist")
@@ -134,12 +132,10 @@ class FileValidator:
 
     @staticmethod
     def handle_file_upload(request):
-        # import pdb; pdb.set_trace()
         account = request.user
-        allowed_extensions = [fmt.format for fmt in account.allowed_formats.get_queryset().all()]
+        allowed_extensions = [fmt.format for fmt in account.allowed_formats.get_queryset().filter(active=True).all()]
         # print(allowed_extensions)
         max_file_size = account.max_file_size * 1024 * 1024 # storing max file size in MB
-        import pdb; pdb.set_trace()
         files = request.FILES.getlist('video')
         print(len(files))
         file_ids = []

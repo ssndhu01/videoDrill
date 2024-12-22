@@ -6,10 +6,9 @@ class Files(models.Model):
     file_name = models.CharField(max_length=50)
     # content_type = models.CharField(max_length=50)
     file_path = models.CharField(max_length=250)
-    
 
     def __str__(self):
-        return self.file_name
+        return self.file_name + " - " + str(self.id)
     
 class AccountFiles(models.Model):
     account = models.ForeignKey(Accounts, on_delete=models.CASCADE)
@@ -20,6 +19,6 @@ class AccountFiles(models.Model):
     class Meta:
         unique_together = ('account', 'file')
     
-    # def __str__(self):
-    #     return self.file.file_name
+    def __str__(self):
+        return  self.account.nickname  + " - " + self.file.file_name
 

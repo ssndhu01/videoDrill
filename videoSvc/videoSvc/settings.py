@@ -40,8 +40,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'common',
     'filemanager',
-    'videoeditor',
-
 ]
 
 MIDDLEWARE = [
@@ -145,6 +143,11 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 MEDIA_ROOT = "/data/videos/"
 MEDIA_TEMP = "/data/temp/"
 MEDIA_URL = "http://localhost:8000/file/public/"
+
+MIN_DURATION = 1
+MAX_DURATION = 300
+MAX_VIDEO_SIZE = 50
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

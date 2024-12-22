@@ -1,8 +1,10 @@
 services:
   web:
     image: videosvc:latest
+    container_name: videoSvc
     build: .
-    command: "python3 manage.py runserver 0.0.0.0:8000"
+    # command: "python3 manage.py runserver 0.0.0.0:8000"
+    command: "gunicorn --bind 0.0.0.0:8000 -w4 --threads 4 videoSvc.wsgi:application"
     ports:
       - "8000:8000"
       - "5000:5000"

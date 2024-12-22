@@ -14,7 +14,6 @@ class UploadFileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        # import pdb; pdb.set_trace()
         if 'video' not in request.FILES:
             return HttpResponse("No file uploaded", status=400) 
         
