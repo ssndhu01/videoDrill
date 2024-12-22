@@ -2,13 +2,16 @@ services:
   web:
     image: videosvc:latest
     build: .
+    command: "python3 manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
+      - "5000:5000"
 
     networks:
       - demo
     volumes:
-      - test:/vms:ro
+      - ./videoSvc/:/app/
+      - test:/data/:rw
 
 networks:
   demo:
